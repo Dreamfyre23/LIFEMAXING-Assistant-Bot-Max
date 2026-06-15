@@ -3,7 +3,7 @@ import logging
 import asyncio
 import time
 from collections import defaultdict
-from datetime import datetime, time
+from datetime import datetime, time as dt_time
 from zoneinfo import ZoneInfo
 
 from dotenv import load_dotenv
@@ -22,6 +22,8 @@ from google import genai
 
 # Load environment variables
 load_dotenv()
+
+now = time.monotonic()
 
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
@@ -462,12 +464,12 @@ def main():
 
     job_queue.run_daily(
         daily_tip,
-        time=time(
-            hour=6, 
+        time=dt_time(
+            hour=6,
             minute=0,
             tzinfo=ZoneInfo("Asia/Kolkata")
-        ) 
-    )
+        )
+    )    
 
     logger.info("💪 Max is running...")
     app.run_polling(
