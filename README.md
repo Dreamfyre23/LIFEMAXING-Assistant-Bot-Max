@@ -44,15 +44,7 @@ Max is an AI-powered Telegram assistant built for the **LIFEMAXING** community. 
 
 ---
 
-### Daily Tip Feature
-
-<p align="center">
-  <img src="assets/daily-tip.png" width="250">
-</p>
-
----
-
-### Deployment
+### Render Deployment
 
 <p align="center">
   <img src="assets/render-dashboard.png" width="500">
