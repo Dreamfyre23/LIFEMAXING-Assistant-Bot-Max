@@ -5,7 +5,9 @@ import time
 from collections import defaultdict
 from datetime import datetime, time as dt_time
 from zoneinfo import ZoneInfo
+import threading
 
+from flask import Flask
 from dotenv import load_dotenv
 from telegram import Update, ReactionTypeEmoji
 from telegram.constants import ChatAction
@@ -27,6 +29,12 @@ now = time.monotonic()
 
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+
+web_app = Flask(__name__)
+
+@web_app.route("/")
+def health():
+    return "Max is alive!"
 
 # Configure logging
 logging.basicConfig(
@@ -438,12 +446,26 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
         except TelegramError:
             pass  # Don't crash the error handler itself
 
+def run_web_server():
+    port = int(os.environ.get("PORT", 10000))
+
+    web_app.run(
+        host="0.0.0.0",
+        port=port
+    )
+
 
 # ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------
 
 def main():
+
+    threading.Thread(
+        target=run_web_server,
+        daemon=True
+    ).start()
+    
     app = Application.builder().token(BOT_TOKEN).build()
 
     app.add_handler(CommandHandler("start", start))
