@@ -2,6 +2,12 @@
 
 Max is an AI-powered Telegram assistant built for the **LIFEMAXING** community. It provides evidence-based guidance on fitness, nutrition, mobility, posture, sleep, skincare, and healthy habits.
 
+## 🌟 Join the LIFEMAXING Community
+
+Max was built for the LIFEMAXING community, where members discuss fitness, nutrition, productivity, healthy habits, and self-improvement.
+
+💪 **Join the Telegram Community:** https://t.me/lifemaxinggroup
+
 ## 🚀 Features
 
 - AI-powered health and fitness guidance
