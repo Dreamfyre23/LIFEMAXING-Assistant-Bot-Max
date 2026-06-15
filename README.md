@@ -18,19 +18,45 @@ Max is an AI-powered Telegram assistant built for the **LIFEMAXING** community. 
 
 # 📸 Screenshots
 
-![Bot Profile](assets/bot-profile.jpg)
+### Bot Profile
 
-![Start Command](assets/start-command.jpg)
+<p align="center">
+  <img src="assets/bot-profile.jpg" width="250">
+</p>
 
-![Help Command](assets/help-command.jpg)
+---
 
-![Private Chat](assets/private-chat.jpg)
+### Commands
 
-![Group Mention](assets/group-mention.jpg)
+<p align="center">
+  <img src="assets/start-command.jpg" width="250">
+  <img src="assets/help-command.jpg" width="250">
+</p>
 
-![Daily Tip](assets/daily-tip.png)
+---
 
-![Render Dashboard](assets/render-dashboard.png)
+### Private Chat & Group Interaction
+
+<p align="center">
+  <img src="assets/private-chat.jpg" width="250">
+  <img src="assets/group-mention.jpg" width="250">
+</p>
+
+---
+
+### Daily Tip Feature
+
+<p align="center">
+  <img src="assets/daily-tip.png" width="250">
+</p>
+
+---
+
+### Deployment
+
+<p align="center">
+  <img src="assets/render-dashboard.png" width="250">
+</p>
 
 ---
 
