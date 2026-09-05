@@ -466,17 +466,15 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
 
 
 # ---------------------------------------------------------------------------
-# Entry point
+# Application builder
 # ---------------------------------------------------------------------------
+# This function does exactly what used to live inline in main() below —
+# nothing about handler behavior, the prompt, rate limiting, or the daily
+# tip has changed. It's only been pulled out into its own function so that
+# server.py (the dashboard) can import it and build the same Application
+# without also being forced to call run_webhook() itself.
 
-def main():
-
-    if not WEBHOOK_URL:
-        raise RuntimeError(
-            "WEBHOOK_URL environment variable is not set. "
-            "Set it to this service's public Render URL, e.g. https://max-bot-xxxx.onrender.com"
-        )
-
+def build_application() -> Application:
     app = Application.builder().token(BOT_TOKEN).build()
 
     app.add_handler(CommandHandler("start", start))
@@ -510,6 +508,25 @@ def main():
         first=LOG_CLEANUP_INTERVAL
     )
 
+    return app
+
+
+# ---------------------------------------------------------------------------
+# Entry point (standalone — used only if you ever run `python bot.py`
+# directly instead of `python server.py`. Render should run server.py so
+# the dashboard is available; this is kept so the bot still works exactly
+# as before if run on its own.)
+# ---------------------------------------------------------------------------
+
+def main():
+
+    if not WEBHOOK_URL:
+        raise RuntimeError(
+            "WEBHOOK_URL environment variable is not set. "
+            "Set it to this service's public Render URL, e.g. https://max-bot-xxxx.onrender.com"
+        )
+
+    app = build_application()
     port = int(os.environ.get("PORT", 10000))
 
     logger.info("💪 Max is running (webhook mode)...")
