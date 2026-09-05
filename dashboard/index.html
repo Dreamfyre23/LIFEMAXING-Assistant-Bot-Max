@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Max — control room</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+
+  <!-- Login screen -->
+  <div id="login-screen" class="login-screen">
+    <form id="login-form" class="login-card">
+      <p class="login-mark">Max</p>
+      <h1>Sign in to the control room</h1>
+      <p class="login-sub">Monitor and steer the LIFEMAXING bot from here.</p>
+      <input type="password" id="password-input" placeholder="Password" autocomplete="current-password" />
+      <button type="submit">Sign in</button>
+      <p id="login-error" class="login-error"></p>
+    </form>
+  </div>
+
+  <!-- Dashboard -->
+  <div id="dashboard" class="dashboard hidden">
+
+    <header class="topbar">
+      <div class="topbar-left">
+        <span class="mark">Max</span>
+        <span class="sub">control room</span>
+      </div>
+      <div class="topbar-right">
+        <span id="status-pill" class="pill pill-online">
+          <span class="dot"></span> online
+        </span>
+        <button id="logout-btn" class="ghost-btn">Sign out</button>
+      </div>
+    </header>
+
+    <main class="grid">
+
+      <!-- Left column -->
+      <div class="col-left">
+
+        <section class="card">
+          <h2>Status</h2>
+          <dl class="stat-list">
+            <div><dt>Bot</dt><dd id="stat-username">—</dd></div>
+            <div><dt>Uptime</dt><dd id="stat-uptime">—</dd></div>
+            <div><dt>Rate limit</dt><dd id="stat-rate">—</dd></div>
+          </dl>
+        </section>
+
+        <section class="card">
+          <h2>Controls</h2>
+          <button id="pause-btn" class="action-btn">Pause bot</button>
+          <button id="tip-btn" class="action-btn secondary">Send daily tip now</button>
+          <p class="hint">Pausing stops Max from replying to any message. Existing conversations aren't affected — nothing gets deleted, it just stays quiet until resumed.</p>
+        </section>
+
+        <section class="card">
+          <h2>Rate limiting</h2>
+          <label>Messages allowed
+            <input type="number" id="rate-limit-input" min="1" />
+          </label>
+          <label>Per window (seconds)
+            <input type="number" id="rate-window-input" min="1" />
+          </label>
+          <button id="save-rate-btn" class="action-btn secondary">Save</button>
+        </section>
+
+        <section class="card">
+          <h2>System prompt</h2>
+          <textarea id="prompt-input" rows="10" spellcheck="false"></textarea>
+          <button id="save-prompt-btn" class="action-btn secondary">Save prompt</button>
+          <p class="hint">Takes effect on the next message. No redeploy needed.</p>
+        </section>
+
+      </div>
+
+      <!-- Right column: log console -->
+      <div class="col-right">
+        <section class="card console-card">
+          <div class="console-header">
+            <h2>Live log</h2>
+            <span id="log-count" class="log-count">0 lines</span>
+          </div>
+          <pre id="log-console" class="log-console"></pre>
+        </section>
+      </div>
+
+    </main>
+  </div>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>
