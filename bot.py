@@ -5,9 +5,7 @@ import time
 from collections import defaultdict
 from datetime import datetime, time as dt_time
 from zoneinfo import ZoneInfo
-import threading
 
-from flask import Flask
 from dotenv import load_dotenv
 from telegram import Update, ReactionTypeEmoji
 from telegram.constants import ChatAction
@@ -25,16 +23,12 @@ from google import genai
 # Load environment variables
 load_dotenv()
 
-now = time.monotonic()
-
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
-web_app = Flask(__name__)
-
-@web_app.route("/")
-def health():
-    return "Max is alive!"
+# Public base URL of this Render service, e.g. https://max-bot-xxxx.onrender.com
+# Set this as an env var in Render — used to register the Telegram webhook.
+WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 
 # Configure logging
 logging.basicConfig(
@@ -65,6 +59,10 @@ TIP_TOPICS = {
 RATE_LIMIT = 10           # max requests
 RATE_WINDOW = 60          # per 60 seconds
 user_request_log: dict[int, list[float]] = defaultdict(list)
+
+# How often to sweep out users with no recent requests, so this dict
+# doesn't grow forever and eventually eat up the free instance's memory.
+LOG_CLEANUP_INTERVAL = 3600  # seconds (1 hour)
 
 PROMPT_TEMPLATE = """
 You are Max, the official AI assistant for the LIFEMAXING community.
@@ -107,7 +105,7 @@ User Question:
 """
 
 # ---------------------------------------------------------------------------
-# Handlers
+# Daily tip job
 # ---------------------------------------------------------------------------
 
 async def daily_tip(context: ContextTypes.DEFAULT_TYPE):
@@ -140,6 +138,26 @@ Start with:
         chat_id=LIFEMAXING_GROUP_ID,
         text=tip
     )
+
+
+# ---------------------------------------------------------------------------
+# Rate-limit log housekeeping job
+# ---------------------------------------------------------------------------
+
+async def cleanup_rate_limit_log(context: ContextTypes.DEFAULT_TYPE):
+    """Periodically drop users with no timestamps left in the current window,
+    so user_request_log doesn't grow unbounded over the life of the process."""
+    now = time.monotonic()
+    stale_users = [
+        user_id
+        for user_id, timestamps in user_request_log.items()
+        if not [t for t in timestamps if now - t < RATE_WINDOW]
+    ]
+    for user_id in stale_users:
+        del user_request_log[user_id]
+
+    if stale_users:
+        logger.info(f"Cleaned up rate-limit log for {len(stale_users)} inactive users.")
 
 
 # ---------------------------------------------------------------------------
@@ -324,10 +342,10 @@ async def testtip(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "💪 MAX HELP\n\n"
-        
+
         "ABOUT MAX\n"
         "I'm the official AI assistant of the LIFEMAXING community.\n\n"
-        
+
         "I can help with:\n"
         "• Fitness\n"
         "• Nutrition\n"
@@ -335,11 +353,11 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "• Posture\n"
         "• Skincare\n"
         "• Healthy habits\n\n"
-        
+
         "HOW TO USE ME\n"
         "Private Chat:\n"
         "• Simply send your question.\n\n"
-        
+
         "Group Chat:\n"
         "• Mention @LifemaxingAI_bot\n"
         "• Or reply to one of my messages.\n\n"
@@ -446,14 +464,6 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
         except TelegramError:
             pass  # Don't crash the error handler itself
 
-def run_web_server():
-    port = int(os.environ.get("PORT", 10000))
-
-    web_app.run(
-        host="0.0.0.0",
-        port=port
-    )
-
 
 # ---------------------------------------------------------------------------
 # Entry point
@@ -461,17 +471,18 @@ def run_web_server():
 
 def main():
 
-    threading.Thread(
-        target=run_web_server,
-        daemon=True
-    ).start()
-    
+    if not WEBHOOK_URL:
+        raise RuntimeError(
+            "WEBHOOK_URL environment variable is not set. "
+            "Set it to this service's public Render URL, e.g. https://max-bot-xxxx.onrender.com"
+        )
+
     app = Application.builder().token(BOT_TOKEN).build()
 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("help", help_command))
     app.add_handler(CommandHandler("testtip", testtip))
-    
+
     app.add_handler(
         MessageHandler(
             filters.TEXT & ~filters.COMMAND,
@@ -491,10 +502,22 @@ def main():
             minute=0,
             tzinfo=ZoneInfo("Asia/Kolkata")
         )
-    )    
+    )
 
-    logger.info("💪 Max is running...")
-    app.run_polling(
+    job_queue.run_repeating(
+        cleanup_rate_limit_log,
+        interval=LOG_CLEANUP_INTERVAL,
+        first=LOG_CLEANUP_INTERVAL
+    )
+
+    port = int(os.environ.get("PORT", 10000))
+
+    logger.info("💪 Max is running (webhook mode)...")
+    app.run_webhook(
+        listen="0.0.0.0",
+        port=port,
+        url_path=BOT_TOKEN,                              # secret path — use the bot token
+        webhook_url=f"{WEBHOOK_URL}/{BOT_TOKEN}",
         allowed_updates=Update.ALL_TYPES,
         drop_pending_updates=True   # ignore messages sent while bot was offline
     )
