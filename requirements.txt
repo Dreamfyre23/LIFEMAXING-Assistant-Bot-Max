@@ -3,3 +3,6 @@ google-genai
 python-dotenv
 apscheduler
 python-telegram-bot[webhooks,job-queue]==21.11
+fastapi
+uvicorn
+itsdangerous
